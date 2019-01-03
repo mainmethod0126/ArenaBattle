@@ -3,6 +3,9 @@
 # Edit at https://www.gitignore.io/?templates=unrealengine
 
 ### UnrealEngine ###
+# unreal-c-example-4.21v files
+unreal-c-example-4.21v/
+
 # Visual Studio 2015 user specific files
 .vs/
 

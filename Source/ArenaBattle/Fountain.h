@@ -4,6 +4,7 @@
 
 //#include "CoreMinimal.h"
 #include "ArenaBattle.h"
+#include "GameFramework/RotatingMovementComponent.h"
 #include "GameFramework/Actor.h"
 #include "Fountain.generated.h"
 
@@ -22,7 +23,21 @@ public:
 
 protected:
 	// Called when the game starts or when spawned
+
+	// 2019-01-03 wssin
+	// 액터의 이벤트 호출 순서
+	// 1. PostInitializeComponents : 액터에 속한 모든 컴포넌트의 세팅이 완료되면 언리얼 엔진은 액터의 PostInitializeComponents 함수를 호출한다.
+	// 2. BeginPlay : 액터가 게임에 참여할 때 (배우 입장~) 실행
+	// 3. Tick : 액터가 무대에 올라가 있을 때 매 프레임마다 호출
+	// 4. EndPlay : 액터가 무대에서 퇴장할 때 호출
+
+	// C++에서 override 키워드를 사용하여 컴파일러에게 상속받을 것을 알려주는 것이 좋다.
+	// 가상 함수를 상속받아 구현할 경우에는!
+	
+	virtual void PostInitializeComponents() override;
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	
 
 public:	
 	// Called every frame
@@ -58,4 +73,17 @@ public:
 		
 	UPROPERTY(EditAnyWhere, Category=ID)
 	int32 ID;
+
+	// 2019-01-03 wssin
+	// 정보 은닉을 위하여 private으로 선언하고,
+	// private을 EditAnyWhere로 사용할 시 컴파일 에러가 발생하니 이것을 방지하기 위하여
+	// AllowPrivateAccess라는 META 키워드를 추가하면 에디터에서 이를 편집함과 동시에
+	// 변수 데이터를 은닉할 수 있게 돼 프로그래밍 영역에서 캡슐화가 가능해진다.
+ private:
+	UPROPERTY(EditAnyWhere, Category = Stat, Meta = (AllowPrivateAccess = true))
+	float RotateSpeed;
+
+	UPROPERTY(VisibleAnyWhere)
+	URotatingMovementComponent* Movement;
+	
 };

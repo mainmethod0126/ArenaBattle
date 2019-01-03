@@ -6,13 +6,14 @@
 AFountain::AFountain()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	// 2019-01-02 WSSIN 언리얼에서는 생성자에서 컴포넌트를 생성할 때 new 대신 CreateDefaultSubobject 씀.
 	Body	= CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BODY"));
 	Water	= CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WATER"));
 	Light	= CreateDefaultSubobject<UPointLightComponent>(TEXT("LIGHT"));
 	Splash	= CreateDefaultSubobject<UParticleSystemComponent>(TEXT("SPLASH"));
+	Movement = CreateDefaultSubobject<URotatingMovementComponent>(TEXT("MOVEMENT"));
 
 	// 2019-01-02 WSSIN 액터는 루트컴포넌트를 무조건 지정해야한다!! 영어 문장에서 주어없는 문장은 없는 것 처럼 오케이?
 	// 루트 지정 RootComponent = "생성된 컴포넌트 객체"
@@ -61,8 +62,18 @@ AFountain::AFountain()
 		Water->SetStaticMesh(SM_WATER.Object);
 	}
 
+	RotateSpeed = 30.0f;
+	Movement->RotationRate = FRotator(0.0f, RotateSpeed, 0.0f);
+	
 
 }
+
+void AFountain::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	ABLOG_S(Warning);
+}
+
 
 // Called when the game starts or when spawned
 void AFountain::BeginPlay()
@@ -79,6 +90,22 @@ void AFountain::BeginPlay()
 void AFountain::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	// FRotator(Pitch, Yaw, Roll)
+	// Pitch : 좌우를 기준으로 돌아가는 회전이다. 언리얼 엔진에서는 Y축 회전을 표현할 때 사용한다.
+	// Yaw : 상하를 기준으로 돌아가는 회전이다. 언리얼 엔진에서는 Z축 회전을 표현할 때 사용한다.
+	// Roll : 정면을 기준으로 돌아가는 회전이다. 언리얼 엔진에서는 X축 회전을 표현할 때 사용한다.
 
+	// DeltaTime을 사용해 초당 일정한 속도로 분수대를 회전시키는 코드
+	/*AddActorLocalRotation(FRotator(0.0f, RotateSpeed * DeltaTime, 0.0f));
+*/
 }
+
+
+void AFountain::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	ABLOG_S(Warning);
+}
+
 
