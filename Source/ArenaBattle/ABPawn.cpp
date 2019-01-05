@@ -22,7 +22,7 @@ AABPawn::AABPawn()
 	Capsule->SetCapsuleHalfHeight(120.0f);
 	Capsule->SetCapsuleRadius(34.0f);
 	Mesh->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -88.0f), FRotator(0.0f, -90.0f, 0.0f));
-	SpringArm->TargetArmLength = 400.0f;
+	SpringArm->TargetArmLength = 700.0f;
 	SpringArm->SetRelativeRotation(FRotator(-15.0f, 0.0f, 0.0f));
 
 	FString strSkeletalMeshPath = TEXT("");
@@ -39,6 +39,24 @@ AABPawn::AABPawn()
 void AABPawn::BeginPlay()
 {
 	Super::BeginPlay();
+
+	//Mesh->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+
+	//ConstructorHelpers::FClassFinder<UAnimInstance> WARRIOR_ANIM(TEXT("/Game/ParagonGreystone/Characters/Heroes/Greystone/Greystone_AnimBlueprint.Greystone_AnimBlueprint_C"));
+
+	//if (WARRIOR_ANIM.Succeeded())
+	//{
+	//	Mesh->SetAnimInstanceClass(WARRIOR_ANIM.Class);
+	//}
+
+	Mesh->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+
+	UAnimationAsset* AnimAsset = LoadObject<UAnimationAsset>(nullptr, TEXT("/Game/ParagonGreystone/Characters/Heroes/Greystone/Animations/Jog_Fwd.Jog_Fwd"));
+
+	if (AnimAsset != nullptr)
+	{
+		Mesh->PlayAnimation(AnimAsset, true);
+	}
 	
 }
 
@@ -54,5 +72,18 @@ void AABPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+	PlayerInputComponent->BindAxis(TEXT("UpDown"), this, &AABPawn::UpDown);
+	PlayerInputComponent->BindAxis(TEXT("LeftRight"), this, &AABPawn::LeftRight);
 }
 
+void AABPawn::UpDown(float NewAxisValue) 
+{
+	AddMovementInput(GetActorForwardVector(), NewAxisValue);
+	ABLOG(Warning, TEXT("%f"), NewAxisValue);
+}
+
+void AABPawn::LeftRight(float NewAxisValue)
+{
+	AddMovementInput(GetActorRightVector(), NewAxisValue);
+	ABLOG(Warning, TEXT("%f"), NewAxisValue);
+}
