@@ -34,6 +34,8 @@ AABCharacter::AABCharacter()
 	{
 		GetMesh()->SetAnimInstanceClass(WARRIOR_ANIM.Class);
 	}
+
+	SetControlMode(0);
 }
 
 // Called when the game starts or when spawned
@@ -63,12 +65,16 @@ void AABCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 void AABCharacter::UpDown(float NewAxisValue)
 {
-	AddMovementInput(GetActorForwardVector(), NewAxisValue);
+	/*AddMovementInput(GetActorForwardVector(), NewAxisValue);*/
+
+	AddMovementInput(FRotationMatrix(GetControlRotation()).GetUnitAxis(EAxis::X), NewAxisValue);
 }
 
 void AABCharacter::LeftRight(float NewAxisValue)
 {
-	AddMovementInput(GetActorRightVector(), NewAxisValue);
+	//AddMovementInput(GetActorRightVector(), NewAxisValue);
+
+	AddMovementInput(FRotationMatrix(GetControlRotation()).GetUnitAxis(EAxis::Y), NewAxisValue);
 }
 
 void AABCharacter::LookUp(float NewAxisValue)
@@ -81,3 +87,23 @@ void AABCharacter::Turn(float NewAxisValue)
 	AddControllerYawInput(NewAxisValue);
 }
 
+
+void AABCharacter::SetControlMode(int ControlMode)
+{
+	if (!ControlMode)
+	{
+		// 2019-01-09 wssin
+		// SpringArm = 삼인친 시점 편리하게 구성하게 도와주는 컴포넌트,
+		// TargetArmLength  = 카메라 거치대 위치
+		SpringArm->TargetArmLength = 450.0f; // 4.5 미터
+		SpringArm->SetRelativeRotation(FRotator::ZeroRotator);
+		SpringArm->bUsePawnControlRotation = true;
+		SpringArm->bInheritPitch = true;
+		SpringArm->bInheritRoll= true;
+		SpringArm->bInheritYaw = true;
+		SpringArm->bDoCollisionTest = true;
+		bUseControllerRotationYaw = false;
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+		GetCharacterMovement()->RotationRate = FRotator(0.0f, 300.0f, 0.0f); // Character 회전 속도를 300.0f 단위가 어떻게 되는건지 모르겠네
+	}
+}
