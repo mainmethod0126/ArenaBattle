@@ -16,8 +16,41 @@ UABAnimInstance::UABAnimInstance()
 
 void UABAnimInstance::PlayAttackMontage()
 {
-	if (!Montage_IsPlaying(AttackMontage))
+	Montage_Play(AttackMontage, 1.0f);
+}
+
+// 몽타주에 AttackHitCheck 노티파이가 발생하였을 시 호출 됨 
+void UABAnimInstance::AnimNotify_AttackHitCheck()
+{
+	ABLOG_S(Warning);
+	OnAttackHitCheck.Broadcast();
+}
+
+// 몽타주에 NextAttackCheck 노티파이가 발생하였을 시 호출 됨
+void UABAnimInstance::AnimNotify_NextAttackCheck()
+{
+	ABLOG_S(Warning);
+	OnNextAttackCheck.Broadcast();
+}
+
+void UABAnimInstance::JumpToAttackMontageSection(int32 NewSection)
+{
+	ABCHECK(Montage_IsPlaying(AttackMontage));
+	Montage_JumpToSection(GetAttackMontageSectionName(NewSection), AttackMontage);
+}
+
+FName UABAnimInstance::GetAttackMontageSectionName(int32 Section)
+{
+	ABLOG_S(Warning);
+	
+	FName fnTemp;
+
+	if (Section > 1)
 	{
-		Montage_Play(AttackMontage, 1.0f);
+		fnTemp = *FString::Printf(TEXT("Attack%d"), Section);
 	}
+
+	//FName fnTemp = *FString::Printf(TEXT("Attack%d"), Section);
+	ABCHECK(FMath::IsWithinInclusive<int32>(Section, 1, 4), NAME_None);
+	return FName(*FString::Printf(TEXT("Attack%d"), Section));
 }

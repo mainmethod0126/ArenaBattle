@@ -12,8 +12,14 @@ AABCharacter::AABCharacter()
 	ArmLengthSpeed = 3.0f;
 	ArmRotationnSpeed = 10.0f;
 
+	// 콤보 공격을 위한 멤버 변수 초기화.
+	MaxCombo = 4;
+	AttackEndComboState();
+
 	IsAttacking = false;
 
+	// 2019-01-13 wssin
+	// 점프의 높이 설정.
 	GetCharacterMovement()->JumpZVelocity = 400.0f;
 
 	SpringArm	= CreateDefaultSubobject<USpringArmComponent>(TEXT("SPRINGARM"));
@@ -45,6 +51,34 @@ AABCharacter::AABCharacter()
 
 	SetControlMode(EControlMode::DIABLO);
 }
+
+void AABCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	//auto AnimInstance = Cast<UABAnimInstance>(GetMesh()->GetAnimInstance());
+
+	//AnimInstance->OnMontageEnded.AddDynamic(this, &AABCharacter::OnAttackMontageEnded);
+
+	ABAnim = Cast<UABAnimInstance>(GetMesh()->GetAnimInstance());
+
+	// 애님 인스턴스에 등록된 몽타주가 종료되었을 시 발생하는 OnMontageEnded함수에 OnAttackMontageEnded를 등록하여
+	// 종료 시 OnAttackMontageEnded 함수를 호출할 수 있도록 함.
+	// 델리게이트
+	// C언어의 콜백과 비슷해 보인다.
+	ABAnim->OnMontageEnded.AddDynamic(this, &AABCharacter::OnAttackMontageEnded);
+
+	ABAnim->OnNextAttackCheck.AddLambda([this]() -> void {
+		ABLOG(Warning, TEXT("OnNextAttackCheck"));
+		CanNextCombo = false;
+
+		if (IsComboInputOn)
+		{
+			AttackStartComboState();
+			ABAnim->JumpToAttackMontageSection(CurrentCombo);
+		}
+	});
+}
+
 
 // Called when the game starts or when spawned
 void AABCharacter::BeginPlay()
@@ -244,30 +278,58 @@ void AABCharacter::ViewChange()
 
 void AABCharacter::Attack()
 {
+	//if (IsAttacking)
+	//{
+	//	return;
+	//}
+
+	//auto AnimInstance = Cast<UABAnimInstance>(GetMesh()->GetAnimInstance());
+	//if (AnimInstance == nullptr)
+	//{
+	//	return;
+	//}
+
+	//ABAnim->PlayAttackMontage();
+	//IsAttacking = true;
+
+
 	if (IsAttacking)
 	{
-		return;
+		ABCHECK(FMath::IsWithinInclusive<int32>(CurrentCombo, 1, MaxCombo));
+		if (CanNextCombo)
+		{
+			IsComboInputOn = true;
+		}
 	}
-
-	auto AnimInstance = Cast<UABAnimInstance>(GetMesh()->GetAnimInstance());
-	if (AnimInstance == nullptr)
+	else
 	{
-		return;
+		ABCHECK(CurrentCombo == 0);
+		AttackStartComboState();
+		ABAnim->PlayAttackMontage();
+		ABAnim->JumpToAttackMontageSection(CurrentCombo);
+		IsAttacking = true;
 	}
-
-	AnimInstance->PlayAttackMontage();
-	IsAttacking = true;
 }
 
 void AABCharacter::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
+	ABCHECK(IsAttacking);
+	ABCHECK(CurrentCombo > 0);
 	IsAttacking = false;
+	AttackEndComboState();
 }
 
-void AABCharacter::PostInitializeComponents()
+void AABCharacter::AttackStartComboState()
 {
-	Super::PostInitializeComponents();
-	auto AnimInstance = Cast<UABAnimInstance>(GetMesh()->GetAnimInstance());
+	CanNextCombo = true;
+	IsComboInputOn = false;
+	ABCHECK(FMath::IsWithinInclusive<int32>(CurrentCombo, 0, MaxCombo - 1));
+	CurrentCombo = FMath::Clamp<int32>(CurrentCombo + 1, 1, MaxCombo);
+}
 
-	AnimInstance->OnMontageEnded.AddDynamic(this, &AABCharacter::OnAttackMontageEnded);
+void AABCharacter::AttackEndComboState()
+{
+	IsComboInputOn = false;
+	CanNextCombo = false;
+	CurrentCombo = 0;
 }

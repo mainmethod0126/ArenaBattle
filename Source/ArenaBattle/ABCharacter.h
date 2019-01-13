@@ -55,11 +55,45 @@ private:
 	void LookUp(float NewAxisValue);
 	void Turn(float NewAxisValue);
 	void ViewChange();
+
+	// 2019-01-13 wssin
+	// 밀리 공격 함수.
 	void Attack();
 
+
+	// 2019-01-13 wssin
+	// 코드 정리.
+	//
+
+
+
+
+	// AttackMontage이 끝났을 시 호출되는 함수.
 	UFUNCTION()
 	void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 	bool IsAttacking;
+
+	UPROPERTY()
+	class UABAnimInstance* ABAnim;
+	
+	// 콤보 공격 시작을 알리는 함수
+	void AttackStartComboState();
+	
+	// 콤보 공격 끝을 알리는 함수 
+	void AttackEndComboState();
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	bool CanNextCombo;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	bool IsComboInputOn;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	int32 CurrentCombo;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
+	int32 MaxCombo;
+
 };
