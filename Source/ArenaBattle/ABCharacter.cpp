@@ -49,7 +49,7 @@ AABCharacter::AABCharacter()
 		GetMesh()->SetAnimInstanceClass(WARRIOR_ANIM.Class);
 	}
 
-	SetControlMode(EControlMode::DIABLO);
+	SetControlMode(EControlMode::GTA);
 }
 
 void AABCharacter::PostInitializeComponents()

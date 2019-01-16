@@ -30,6 +30,8 @@ void UABAnimInstance::AnimNotify_AttackHitCheck()
 void UABAnimInstance::AnimNotify_NextAttackCheck()
 {
 	ABLOG_S(Warning);
+
+	// 등록된 모든 
 	OnNextAttackCheck.Broadcast();
 }
 

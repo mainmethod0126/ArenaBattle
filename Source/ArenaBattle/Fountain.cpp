@@ -6,14 +6,14 @@
 AFountain::AFountain()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	// 2019-01-02 WSSIN 언리얼에서는 생성자에서 컴포넌트를 생성할 때 new 대신 CreateDefaultSubobject 씀.
 	Body	= CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BODY"));
 	Water	= CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WATER"));
 	Light	= CreateDefaultSubobject<UPointLightComponent>(TEXT("LIGHT"));
 	Splash	= CreateDefaultSubobject<UParticleSystemComponent>(TEXT("SPLASH"));
-	Movement = CreateDefaultSubobject<URotatingMovementComponent>(TEXT("MOVEMENT"));
+	/*Movement = CreateDefaultSubobject<URotatingMovementComponent>(TEXT("MOVEMENT"));*/
 
 	// 2019-01-02 WSSIN 액터는 루트컴포넌트를 무조건 지정해야한다!! 영어 문장에서 주어없는 문장은 없는 것 처럼 오케이?
 	// 루트 지정 RootComponent = "생성된 컴포넌트 객체"
@@ -62,8 +62,8 @@ AFountain::AFountain()
 		Water->SetStaticMesh(SM_WATER.Object);
 	}
 
-	RotateSpeed = 30.0f;
-	Movement->RotationRate = FRotator(0.0f, RotateSpeed, 0.0f);
+	//RotateSpeed = 30.0f;
+	//Movement->RotationRate = FRotator(0.0f, RotateSpeed, 0.0f);
 	
 
 }
