@@ -84,6 +84,9 @@ private:
 	// 콤보 공격 끝을 알리는 함수 
 	void AttackEndComboState();
 
+	// 
+	void  AttackCheck();
+
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 	bool CanNextCombo;
 

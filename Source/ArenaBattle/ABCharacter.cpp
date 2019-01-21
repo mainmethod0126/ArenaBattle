@@ -49,6 +49,8 @@ AABCharacter::AABCharacter()
 		GetMesh()->SetAnimInstanceClass(WARRIOR_ANIM.Class);
 	}
 
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("ABCharacter"));
+
 	SetControlMode(EControlMode::GTA);
 }
 
@@ -77,6 +79,11 @@ void AABCharacter::PostInitializeComponents()
 			ABAnim->JumpToAttackMontageSection(CurrentCombo);
 		}
 	});
+
+	// UObject 기반 멤버 함수 델리게이트를 추가합니다. UObject 델리게이트는 자신의 오브젝트에 대한 약 레퍼런스를 유지합니다.
+	// 델리게이트에 함수를 반잉딩시켜서 델리게이트가 발동되었을때 호출할 수 있도록..
+	// 어택 노티파이가 발생하였을때 BroadCast하여 등록된 함수 호출
+	ABAnim->OnAttackHitCheck.AddUObject(this, &AABCharacter::AttackCheck);
 }
 
 
@@ -178,8 +185,8 @@ void AABCharacter::LookUp(float NewAxisValue)
 	switch (enumCurrentConrolMode)
 	{
 	case EControlMode::GTA:
-AddControllerPitchInput(NewAxisValue);
-break;
+		AddControllerPitchInput(NewAxisValue);
+		break;
 	default:
 		break;
 	}
@@ -332,4 +339,44 @@ void AABCharacter::AttackEndComboState()
 	IsComboInputOn = false;
 	CanNextCombo = false;
 	CurrentCombo = 0;
+}
+
+void  AABCharacter::AttackCheck()
+{
+	// 물리적 충돌이 탐지된 경우 관련된 정보를 담을 구조체
+	FHitResult HitResult;
+
+	// 탐색 방법에 대한 설정 값을 모아둔 구조체
+	
+	//struct ENGINE_API FCollisionObjectQueryParams
+	//{
+	//	enum InitType
+	//	{
+	//		AllObjects,
+	//		AllStaticObjects,
+	//		AllDynamicObjects
+	//	};
+
+
+	FCollisionQueryParams Params(NAME_None, false, this);
+	
+	// 트레이스 채널을 사용해 물리적 충돌 여부를 가리는 함수
+	bool bResult = GetWorld()->SweepSingleByChannel(
+		HitResult, // 물리적 충돌이 탐지된 경우 관련된 정보를 담을 구조체
+		GetActorLocation(), // 탐색을 시작할 위치 액터가 있는 곳
+		GetActorLocation() + GetActorForwardVector() * 200.0f, // 탐색을 끝낼 위치 엑터의 시선방향으로부터 200cm 떨어진 곳
+		FQuat::Identity,
+		ECollisionChannel::ECC_GameTraceChannel2, // 트레이스 채널에 추가한 Attack이 채널 2번이다
+		FCollisionShape::MakeSphere(50.0f), // 탐색에 사용할 도형을 만든다. 반지름 50cm 구
+		Params // 탐색 방법을 설정하는 파라미터, 공격 명령을 내리는 자신은 이 탐색에 감지되지 않도록 포인터 this를 무시할 액터 목록에 넣어줘야 한다.
+	);
+
+	if (bResult)
+	{
+		if (HitResult.Actor.IsValid())
+		{
+			// 충돌된 액터 정보 출력
+			ABLOG(Warning, TEXT("Hit Actor Name : %s"), *HitResult.Actor->GetName());
+		}
+	}
 }
