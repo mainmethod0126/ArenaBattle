@@ -6,6 +6,7 @@ UABAnimInstance::UABAnimInstance()
 {
 	CurrentPawnSpeed = 0.0f;
 	
+	IsDead = false;
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> ATTACK_MONTAGE(TEXT("/Game/ParagonGreystone/Characters/Heroes/Greystone/Animations/Greystone_Skeleton_Montage.Greystone_Skeleton_Montage"));
 
 	if (ATTACK_MONTAGE.Succeeded())
@@ -14,8 +15,26 @@ UABAnimInstance::UABAnimInstance()
 	}
 }
 
+void UABAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
+{
+	Super::NativeUpdateAnimation(DeltaSeconds);
+
+	auto Pawn = TryGetPawnOwner();
+	if (!::IsValid(Pawn)) return;
+
+	if (!IsDead) 
+	{
+		if (::IsValid(Pawn))
+		{
+			CurrentPawnSpeed = Pawn->GetVelocity().Size();
+		}
+	}
+}
+
+
 void UABAnimInstance::PlayAttackMontage()
 {
+	ABCHECK(!IsDead);
 	Montage_Play(AttackMontage, 1.0f);
 }
 
@@ -37,6 +56,7 @@ void UABAnimInstance::AnimNotify_NextAttackCheck()
 
 void UABAnimInstance::JumpToAttackMontageSection(int32 NewSection)
 {
+	ABCHECK(!IsDead);
 	ABCHECK(Montage_IsPlaying(AttackMontage));
 	Montage_JumpToSection(GetAttackMontageSectionName(NewSection), AttackMontage);
 }

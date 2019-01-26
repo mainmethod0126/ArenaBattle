@@ -20,6 +20,7 @@ class ARENABATTLE_API UABAnimInstance : public UAnimInstance
 
 public:
 	UABAnimInstance();
+	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
 	void PlayAttackMontage();
 	void JumpToAttackMontageSection(int32 NewSection);
@@ -27,6 +28,10 @@ public:
 	// 멀티케스트 델리게이트 선언.
 	FOnNextAttackCheckDelegate OnNextAttackCheck;
 	FOnAttackHitCheckDelegate OnAttackHitCheck;
+
+	// 사망액션을 구현하기 위한
+	void SetDeadAnim() { IsDead = true; }
+
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta = (AllowPrivateAccess = true))
@@ -45,4 +50,7 @@ private:
 	void AnimNotify_NextAttackCheck();
 
 	FName GetAttackMontageSectionName(int32 Section);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta = (AllowPrivateAccess = true))
+	bool IsDead;
 };

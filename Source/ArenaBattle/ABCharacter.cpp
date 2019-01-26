@@ -2,10 +2,17 @@
 
 #include "ABCharacter.h"
 #include "ABAnimInstance.h"
+#include "DrawDebugHelpers.h"
 
 // Sets default values
 AABCharacter::AABCharacter()
 {
+	// 2019-01-21 wssin
+	// 디버그 드로잉 관련 셋팅
+	AttackRange = 200.0f;
+	AttackRadius = 50.0f;
+
+
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -364,12 +371,41 @@ void  AABCharacter::AttackCheck()
 	bool bResult = GetWorld()->SweepSingleByChannel(
 		HitResult, // 물리적 충돌이 탐지된 경우 관련된 정보를 담을 구조체
 		GetActorLocation(), // 탐색을 시작할 위치 액터가 있는 곳
-		GetActorLocation() + GetActorForwardVector() * 200.0f, // 탐색을 끝낼 위치 엑터의 시선방향으로부터 200cm 떨어진 곳
+		GetActorLocation() + GetActorForwardVector() * AttackRange, // 탐색을 끝낼 위치 엑터의 시선방향으로부터 200cm 떨어진 곳
 		FQuat::Identity,
 		ECollisionChannel::ECC_GameTraceChannel2, // 트레이스 채널에 추가한 Attack이 채널 2번이다
-		FCollisionShape::MakeSphere(50.0f), // 탐색에 사용할 도형을 만든다. 반지름 50cm 구
+		FCollisionShape::MakeSphere(AttackRadius), // 탐색에 사용할 도형을 만든다. 반지름 50cm 구
 		Params // 탐색 방법을 설정하는 파라미터, 공격 명령을 내리는 자신은 이 탐색에 감지되지 않도록 포인터 this를 무시할 액터 목록에 넣어줘야 한다.
 	);
+
+// 디버그 시에만 디버그 드로우를 사용하려고
+#if ENABLE_DRAW_DEBUG
+
+	//FVector TraceVec	= 캐릭터가 보고있는 방향의 벡터 * 확인하고자하는 길이 200cm
+	FVector TraceVec	= GetActorForwardVector() * AttackRange;
+
+	// Center			= 캐릭터의 위치로부터 확인하고자하는 벡터의 중간지점을 찾는 식
+	FVector Center		= GetActorLocation() + TraceVec * 0.5f;
+
+	// 캡슐의 중간 높이(길이) 150 cm
+	float HalfHeight	= AttackRange * 0.5f + AttackRadius;
+	
+	// 캡슐 눕히기 위한 회전행렬
+	FQuat CapsuleRot	= FRotationMatrix::MakeFromZ(TraceVec).ToQuat();
+	FColor DrawColor	= bResult ? FColor::Green : FColor::Red;
+	float DebugLifeTime = 5.0f;
+
+	DrawDebugCapsule(GetWorld(),
+		Center,
+		HalfHeight,
+		AttackRadius,
+		CapsuleRot,
+		DrawColor,
+		false,
+		DebugLifeTime);
+
+#endif
+	 
 
 	if (bResult)
 	{
@@ -377,6 +413,27 @@ void  AABCharacter::AttackCheck()
 		{
 			// 충돌된 액터 정보 출력
 			ABLOG(Warning, TEXT("Hit Actor Name : %s"), *HitResult.Actor->GetName());
+
+			// 2019-01-26 wwshin
+			// 
+			FDamageEvent DamageEvent;
+			HitResult.Actor->TakeDamage(50.0f, DamageEvent, GetController(), this);
 		}
 	}
+}
+
+
+
+float AABCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser)
+{
+	float FinalDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	ABLOG(Warning, TEXT("Actor : %s took Damage : %f"), *GetName(), FinalDamage);
+	
+	if (FinalDamage > 0.0f)
+	{
+		ABAnim->SetDeadAnim();
+		SetActorEnableCollision(false);
+	}
+	
+	return FinalDamage;
 }
