@@ -2,6 +2,7 @@
 
 #include "ABCharacter.h"
 #include "ABAnimInstance.h"
+#include "ABWeapon.h"
 #include "DrawDebugHelpers.h"
 
 // Sets default values
@@ -46,6 +47,7 @@ AABCharacter::AABCharacter()
 		GetMesh()->SetSkeletalMesh(SK_CARDBOARD.Object);
 	}
 
+
 	GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
 
 	static ConstructorHelpers::FClassFinder<UAnimInstance> WARRIOR_ANIM(TEXT("/Game/ParagonGreystone/Characters/Heroes/Greystone/Greystone_AnimBlueprint.Greystone_AnimBlueprint_C"));
@@ -55,6 +57,12 @@ AABCharacter::AABCharacter()
 	{
 		GetMesh()->SetAnimInstanceClass(WARRIOR_ANIM.Class);
 	}
+
+
+	
+
+
+
 
 	GetCapsuleComponent()->SetCollisionProfileName(TEXT("ABCharacter"));
 
@@ -99,6 +107,14 @@ void AABCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	FName WeaponeSocket(TEXT("sword_Socket"));
+
+	// 액터를 월드에 생성하고 그걸 현재의 무기로 설정
+	auto CurWeapon = GetWorld()->SpawnActor<AABWeapon>(FVector::ZeroVector, FRotator::ZeroRotator);
+	if (nullptr != CurWeapon)
+	{
+		CurWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponeSocket);
+	}
 }
 
 // Called every frame
