@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "ABItemBox.h"
+#include "ABWeapon.h"
+#include "ABCharacter.h"
 
 // Sets default values
 AABItemBox::AABItemBox()
@@ -27,6 +29,8 @@ AABItemBox::AABItemBox()
 
 	Trigger->SetCollisionProfileName(TEXT("ItemBox"));
 	Box->SetCollisionProfileName(TEXT("NoCollision"));
+
+	WeaponItemClass = AABWeapon::StaticClass();
 }
 
 void AABItemBox::PostInitializeComponents()
@@ -53,5 +57,21 @@ void AABItemBox::Tick(float DeltaTime)
 void AABItemBox::OnCharacterOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	ABLOG_S(Warning);
+
+	auto ABCharacter = Cast<AABCharacter>(OtherActor);
+	ABCHECK(nullptr != ABCharacter);
+
+	if (nullptr != ABCharacter && nullptr != WeaponItemClass)
+	{
+		if (ABCharacter->CanSetWeapon())
+		{
+			auto NewWeapon = GetWorld()->SpawnActor<AABWeapon>(WeaponItemClass, FVector::ZeroVector, FRotator::ZeroRotator);
+			ABCharacter->SetWeapon(NewWeapon);
+		}
+		else
+		{
+			ABLOG(Warning, TEXT("%s can't equip weapon currently."), *ABCharacter->GetName());
+		}
+	}
 }
 

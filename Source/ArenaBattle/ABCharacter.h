@@ -51,6 +51,13 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	UCameraComponent* Camera;
+	
+	// 아이템 습득
+	bool CanSetWeapon();
+	void SetWeapon(class AABWeapon* NewWeapon);
+	UPROPERTY(VisibleAnywhere, Category = Weapon)
+	class AABWeapon* CurrentWeapon;
+
 
 private:
 	void UpDown(float NewAxisValue);
@@ -111,4 +118,7 @@ private:
 
 	// AActerClass에 존재하는 함수
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
+
+
 };

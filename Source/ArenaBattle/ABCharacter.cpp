@@ -106,15 +106,15 @@ void AABCharacter::PostInitializeComponents()
 void AABCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	FName WeaponeSocket(TEXT("sword_Socket"));
+	//
+	//FName WeaponeSocket(TEXT("sword_Socket"));
 
-	// 액터를 월드에 생성하고 그걸 현재의 무기로 설정
-	auto CurWeapon = GetWorld()->SpawnActor<AABWeapon>(FVector::ZeroVector, FRotator::ZeroRotator);
-	if (nullptr != CurWeapon)
-	{
-		CurWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponeSocket);
-	}
+	//// 액터를 월드에 생성하고 그걸 현재의 무기로 설정
+	//auto CurWeapon = GetWorld()->SpawnActor<AABWeapon>(FVector::ZeroVector, FRotator::ZeroRotator);
+	//if (nullptr != CurWeapon)
+	//{
+	//	CurWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponeSocket);
+	//}
 }
 
 // Called every frame
@@ -453,3 +453,25 @@ float AABCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& Da
 	
 	return FinalDamage;
 }
+
+
+bool AABCharacter::CanSetWeapon()
+{
+	return (nullptr == CurrentWeapon);
+}
+
+void AABCharacter::SetWeapon(class AABWeapon* NewWeapon)
+{
+	ABCHECK(nullptr != NewWeapon && nullptr == CurrentWeapon);
+	FName WeaponSocket(TEXT("sword_Socket"));
+	if (nullptr != NewWeapon)
+	{
+		NewWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocket);
+		NewWeapon->SetOwner(this);
+		CurrentWeapon = NewWeapon;
+	}
+}
+
+UPROPERTY(VisibleAnywhere, Category = Weapon)
+class AABWeapon* CurrentWeapon;
+
