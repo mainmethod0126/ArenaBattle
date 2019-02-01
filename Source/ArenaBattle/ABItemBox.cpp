@@ -12,9 +12,13 @@ AABItemBox::AABItemBox()
 
 	Trigger = CreateDefaultSubobject<UBoxComponent>(TEXT("TRIGGER"));
 	Box		= CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BOX"));
+	Effect	= CreateDefaultSubobject<UParticleSystemComponent>(TEXT("EFFEXT"));
+
 
 	RootComponent = Trigger;
 	Box->SetupAttachment(RootComponent);
+	Effect->SetupAttachment(RootComponent);
+
 
 	Trigger->SetBoxExtent(FVector(40.0f, 42.0f, 30.0f));
 	
@@ -24,8 +28,14 @@ AABItemBox::AABItemBox()
 	{
 		Box->SetStaticMesh(SM_BOX.Object);
 	}
-
 	Box->SetRelativeLocation(FVector(0.0f, -3.5f, -30.0f));
+
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> P_CHESTOPEN(TEXT("/Game/InfinityBladeGrassLands/Effects/FX_Treasure/Chest/P_TreasureChest_Open_Mesh.P_TreasureChest_Open_Mesh"));
+	if (P_CHESTOPEN.Succeeded())
+	{
+		Effect->SetTemplate(P_CHESTOPEN.Object);
+		Effect->bAutoActivate = false;
+	}
 
 	Trigger->SetCollisionProfileName(TEXT("ItemBox"));
 	Box->SetCollisionProfileName(TEXT("NoCollision"));
@@ -67,6 +77,10 @@ void AABItemBox::OnCharacterOverlap(UPrimitiveComponent* OverlappedComp, AActor*
 		{
 			auto NewWeapon = GetWorld()->SpawnActor<AABWeapon>(WeaponItemClass, FVector::ZeroVector, FRotator::ZeroRotator);
 			ABCharacter->SetWeapon(NewWeapon);
+			Effect->Activate(true);
+			Box->SetHiddenInGame(true, true);
+			SetActorEnableCollision(false);
+			Effect->OnSystemFinished.AddDynamic(this, &AABItemBox::OnEffectFinished);
 		}
 		else
 		{
@@ -75,3 +89,7 @@ void AABItemBox::OnCharacterOverlap(UPrimitiveComponent* OverlappedComp, AActor*
 	}
 }
 
+void AABItemBox::OnEffectFinished(UParticleSystemComponent* PSystem)
+{
+	Destroy();
+}
