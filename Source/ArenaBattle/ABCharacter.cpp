@@ -2,17 +2,30 @@
 
 #include "ABCharacter.h"
 #include "ABAnimInstance.h"
+#include "ABCharacterStatComponent.h"
 #include "ABWeapon.h"
 #include "DrawDebugHelpers.h"
+#include "ABCharacterWidget.h"
+#include "Components/WidgetComponent.h"
+#include "ABAIController.h"
+
 
 // Sets default values
 AABCharacter::AABCharacter()
 {
+	// 플레이어가 조종하는 폰(캐릭터)를 제외한 나머지는 전부 AI컨트롤의 지배하에 있게만듬
+	AIControllerClass = AABAIController::StaticClass();
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+
+
 	// 2019-01-21 wssin
 	// 디버그 드로잉 관련 셋팅
 	AttackRange = 200.0f;
 	AttackRadius = 50.0f;
 
+	CharacterStat = CreateDefaultSubobject<UABCharacterStatComponent>(TEXT("CHARACTERSTAT"));
+
+	HPBarWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBARWIDGET"));
 
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -32,6 +45,8 @@ AABCharacter::AABCharacter()
 
 	SpringArm	= CreateDefaultSubobject<USpringArmComponent>(TEXT("SPRINGARM"));
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("CAMERA"));
+
+	HPBarWidget->SetupAttachment(GetMesh());
 
 	SpringArm->SetupAttachment(GetCapsuleComponent());
 	Camera->SetupAttachment(SpringArm);
@@ -58,13 +73,17 @@ AABCharacter::AABCharacter()
 		GetMesh()->SetAnimInstanceClass(WARRIOR_ANIM.Class);
 	}
 
-
-	
-
-
-
-
 	GetCapsuleComponent()->SetCollisionProfileName(TEXT("ABCharacter"));
+
+	HPBarWidget->SetRelativeLocation(FVector(0.0f, 0.0f, 205.0f));
+	HPBarWidget->SetWidgetSpace(EWidgetSpace::Screen);
+	static ConstructorHelpers::FClassFinder<UUserWidget> UI_HUD(TEXT("/Game/Book/UI/UI_HPBar.UI_HPBar_C"));
+	
+	if (UI_HUD.Succeeded())
+	{
+		HPBarWidget->SetWidgetClass(UI_HUD.Class);
+		HPBarWidget->SetDrawSize(FVector2D(150.0f, 50.0f));
+	}
 
 	SetControlMode(EControlMode::GTA);
 }
@@ -99,6 +118,15 @@ void AABCharacter::PostInitializeComponents()
 	// 델리게이트에 함수를 반잉딩시켜서 델리게이트가 발동되었을때 호출할 수 있도록..
 	// 어택 노티파이가 발생하였을때 BroadCast하여 등록된 함수 호출
 	ABAnim->OnAttackHitCheck.AddUObject(this, &AABCharacter::AttackCheck);
+
+	CharacterStat->OnHPIsZero.AddLambda([this]() -> void {
+		ABLOG(Warning, TEXT("OnHPIsZero"));
+		ABAnim->SetDeadAnim();
+		SetActorEnableCollision(false);
+
+	});
+
+
 }
 
 
@@ -115,6 +143,12 @@ void AABCharacter::BeginPlay()
 	//{
 	//	CurWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponeSocket);
 	//}
+
+	auto CharacterWidget = Cast<UABCharacterWidget>(HPBarWidget->GetUserWidgetObject());
+	if (nullptr != CharacterWidget)
+	{
+		CharacterWidget->BindCharacterStat(CharacterStat);
+	}
 }
 
 // Called every frame
@@ -433,7 +467,7 @@ void  AABCharacter::AttackCheck()
 			// 2019-01-26 wwshin
 			// 
 			FDamageEvent DamageEvent;
-			HitResult.Actor->TakeDamage(50.0f, DamageEvent, GetController(), this);
+			HitResult.Actor->TakeDamage(CharacterStat->GetAttack(), DamageEvent, GetController(), this);
 		}
 	}
 }
@@ -445,12 +479,14 @@ float AABCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& Da
 	float FinalDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 	ABLOG(Warning, TEXT("Actor : %s took Damage : %f"), *GetName(), FinalDamage);
 	
-	if (FinalDamage > 0.0f)
-	{
-		ABAnim->SetDeadAnim();
-		SetActorEnableCollision(false);
-	}
-	
+	//if (FinalDamage > 0.0f)
+	//{
+	//	ABAnim->SetDeadAnim();
+	//	SetActorEnableCollision(false);
+	//}
+
+	CharacterStat->SetDamage(FinalDamage);
+
 	return FinalDamage;
 }
 
@@ -472,6 +508,4 @@ void AABCharacter::SetWeapon(class AABWeapon* NewWeapon)
 	}
 }
 
-UPROPERTY(VisibleAnywhere, Category = Weapon)
-class AABWeapon* CurrentWeapon;
 

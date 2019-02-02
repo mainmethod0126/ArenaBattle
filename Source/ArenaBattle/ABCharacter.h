@@ -51,7 +51,14 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	UCameraComponent* Camera;
+
+	UPROPERTY(VisibleAnywhere, Category = Stat)
+	class UABCharacterStatComponent* CharacterStat;
 	
+	UPROPERTY(VisibleAnywhere, Category = UI)
+	class UWidgetComponent* HPBarWidget;
+
+
 	// æ∆¿Ã≈€ Ω¿µÊ
 	bool CanSetWeapon();
 	void SetWeapon(class AABWeapon* NewWeapon);
