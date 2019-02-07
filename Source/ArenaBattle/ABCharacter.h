@@ -19,7 +19,8 @@ protected:
 	enum class EControlMode
 	{
 		GTA,
-		DIABLO
+		DIABLO,
+		NPC
 	};
 
 	// Called when the game starts or when spawned
@@ -126,6 +127,7 @@ private:
 	// AActerClass에 존재하는 함수
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
+	virtual void PossessedBy(AController* NewController) override;
 
 
 };

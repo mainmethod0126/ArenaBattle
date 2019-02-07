@@ -9,6 +9,7 @@
 // 여러개의 함수가 등록될 수 있도록 멀티캐스트 델리게이트로 등록.
 DECLARE_MULTICAST_DELEGATE(FOnNextAttackCheckDelegate);
 DECLARE_MULTICAST_DELEGATE(FOnAttackHitCheckDelegate);
+DECLARE_MULTICAST_DELEGATE(FOnCharacterJogStartCheckDelegate);
 
 /**
  * 
@@ -28,6 +29,7 @@ public:
 	// 멀티케스트 델리게이트 선언.
 	FOnNextAttackCheckDelegate OnNextAttackCheck;
 	FOnAttackHitCheckDelegate OnAttackHitCheck;
+	FOnCharacterJogStartCheckDelegate OnCharacterJogStartCheck;
 
 	// 사망액션을 구현하기 위한
 	void SetDeadAnim() { IsDead = true; }
@@ -36,6 +38,9 @@ public:
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta = (AllowPrivateAccess = true))
 	float CurrentPawnSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Pawn, Meta = (AllowPrivateAccess = true))
+	float CurrentPawnAcecl;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 	UAnimMontage* AttackMontage;
@@ -49,6 +54,9 @@ private:
 
 	UFUNCTION()
 	void AnimNotify_NextAttackCheck();
+	
+	UFUNCTION()
+	void AnimNotify_EndCheck();
 
 	FName GetAttackMontageSectionName(int32 Section);
 

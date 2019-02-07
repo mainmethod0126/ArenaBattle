@@ -5,7 +5,8 @@
 UABAnimInstance::UABAnimInstance()
 {
 	CurrentPawnSpeed = 0.0f;
-	
+	CurrentPawnAcecl = 0.0f;
+
 	IsDead = false;
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> ATTACK_MONTAGE(TEXT("/Game/ParagonGreystone/Characters/Heroes/Greystone/Animations/Greystone_Skeleton_Montage.Greystone_Skeleton_Montage"));
 
@@ -37,6 +38,13 @@ void UABAnimInstance::PlayAttackMontage()
 	ABCHECK(!IsDead);
 	Montage_Play(AttackMontage, 1.0f);
 }
+
+void UABAnimInstance::AnimNotify_EndCheck()
+{
+	ABLOG_S(Warning);
+	OnCharacterJogStartCheck.Broadcast();
+}
+
 
 // 몽타주에 AttackHitCheck 노티파이가 발생하였을 시 호출 됨 
 void UABAnimInstance::AnimNotify_AttackHitCheck()

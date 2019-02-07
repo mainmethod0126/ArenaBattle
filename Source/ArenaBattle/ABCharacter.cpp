@@ -126,6 +126,12 @@ void AABCharacter::PostInitializeComponents()
 
 	});
 
+	//ABAnim->OnCharacterJogStartCheck.AddLambda([this]() -> void {
+	//	ABLOG(Warning, TEXT("OnHPIsZero"));
+	//	ABAnim->SetDeadAnim();
+	//	SetActorEnableCollision(false);
+
+	//});
 
 }
 
@@ -316,6 +322,14 @@ void AABCharacter::SetControlMode(EControlMode NewCotnrolMode)
 		GetCharacterMovement()->bUseControllerDesiredRotation = true;
 		GetCharacterMovement()->RotationRate = FRotator(0.0f, 300.0f, 0.0f); // Character 회전 속도를 300.0f 단위가 어떻게 되는건지 모르겠네
 		break;
+
+	case EControlMode::NPC:
+		bUseControllerRotationYaw = false;
+		GetCharacterMovement()->bUseControllerDesiredRotation = false;
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+		GetCharacterMovement()->RotationRate = FRotator(0.0f, 480.0f, 0.0f);
+		break;
+
 	default:
 		break;
 	}
@@ -508,4 +522,19 @@ void AABCharacter::SetWeapon(class AABWeapon* NewWeapon)
 	}
 }
 
+void AABCharacter::PossessedBy(AController * NewController)
+{
+	Super::PossessedBy(NewController);
+
+	if (IsPlayerControlled())
+	{
+		SetControlMode(EControlMode::DIABLO);
+		GetCharacterMovement()->MaxWalkSpeed = 600.0f;
+	}
+	else
+	{
+		SetControlMode(EControlMode::NPC);
+		GetCharacterMovement()->MaxWalkSpeed = 300.0f;
+	}
+}
 
