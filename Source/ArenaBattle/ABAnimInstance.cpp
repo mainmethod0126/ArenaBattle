@@ -7,7 +7,16 @@ UABAnimInstance::UABAnimInstance()
 	CurrentPawnSpeed = 0.0f;
 	CurrentPawnAcecl = 0.0f;
 
-	IsDead = false;
+
+	IsDead	= false;
+	IsInAir = false;
+	IsAccelerating = false;
+
+	Yaw			= 0.0f;
+	Pitch		= 0.0f;
+	Roll		= 0.0f;
+	YawDelta	= 0.0f;
+
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> ATTACK_MONTAGE(TEXT("/Game/ParagonGreystone/Characters/Heroes/Greystone/Animations/Greystone_Skeleton_Montage.Greystone_Skeleton_Montage"));
 
 	if (ATTACK_MONTAGE.Succeeded())
@@ -28,6 +37,48 @@ void UABAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		if (::IsValid(Pawn))
 		{
 			CurrentPawnSpeed = Pawn->GetVelocity().Size();
+			auto Character = Cast<ACharacter>(Pawn);
+			if (Character)
+			{
+				// 공중에 떠있는지 확인
+				IsInAir = Character->GetMovementComponent()->IsFalling();
+				
+				if (Character->GetCharacterMovement()->GetCurrentAcceleration().Size() > 0)
+				{
+					IsAccelerating = true;
+				}
+				else
+				{
+					IsAccelerating = false;
+				}
+
+				// 2019-02-07 wsshin 델타 로테이션 구하기
+				FRotator AimRotation = Character->GetBaseAimRotation();
+				FRotator ActorRotation = Character->GetActorRotation();
+				FRotator DeltaRotation = AimRotation - ActorRotation;
+				
+				Yaw			= DeltaRotation.Yaw;
+				Pitch		= DeltaRotation.Pitch;
+				Roll		= DeltaRotation.Roll;
+
+				FRotator DeltaRotation2 = RotationLastTick - ActorRotation;
+				
+				if (GetCurveValue(TEXT("FullBody")) > 0)
+				{
+					IsFullBody = true;
+				}
+				else
+				{
+					IsFullBody = false;
+				}
+
+				YawDelta = FMath::FInterpTo(YawDelta, (DeltaRotation2.Yaw / DeltaSeconds) / 7.0, DeltaSeconds, 6.0);
+
+				ABLOG(Warning, TEXT("IsAccelerating : %d"), IsAccelerating);
+				ABLOG(Warning, TEXT("IsInAir : %d"), IsInAir);
+
+				RotationLastTick = Character->GetActorRotation();
+			}
 		}
 	}
 }
