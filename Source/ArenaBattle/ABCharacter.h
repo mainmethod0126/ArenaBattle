@@ -6,6 +6,9 @@
 #include "GameFramework/Character.h"
 #include "ABCharacter.generated.h"
 
+DECLARE_MULTICAST_DELEGATE(FOnAttackEndDelegate);
+
+
 UCLASS()
 class ARENABATTLE_API AABCharacter : public ACharacter
 {
@@ -66,6 +69,8 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
 	class AABWeapon* CurrentWeapon;
 
+	void Attack();
+	FOnAttackEndDelegate OnAttackEnd;
 
 private:
 	void UpDown(float NewAxisValue);
@@ -76,7 +81,7 @@ private:
 
 	// 2019-01-13 wssin
 	// 밀리 공격 함수.
-	void Attack();
+	
 
 
 	// 2019-01-13 wssin
@@ -128,6 +133,7 @@ private:
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 	virtual void PossessedBy(AController* NewController) override;
+
 
 
 };
